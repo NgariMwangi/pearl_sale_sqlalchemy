@@ -108,11 +108,11 @@
         <thead>
             <tr>
                 <th>id</th>
-                <th>name</th>
-                <th>buying price</th>
-                <th>selling price</th>
-                <th>stock quantity</th>
-                <th>Edit</th>
+                <th>pid</th>
+                <th>stock_quantity</th>
+                <th>add stock </th>
+                <th>EDIT</th>
+                
                 <!-- <th>Delete</th> -->
 
             </tr>
@@ -121,10 +121,47 @@
             {%for l in list1%}
             <tr>
                 <td>{{l.id}}</td>
-                <td>{{l.name}}</td>
-                <td>{{l.buying_price}}</td>
-                <td>{{l.selling_price}}</td>
+                <td>{{l.pid}}</td>
                 <td>{{l.stock_quantity}}</td>
+                <td>
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter{{l.pid}}">
+                        ADD STOCK
+                    </button>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModalCenter{{l.pid}}" tabindex="-1" role="dialog"
+                        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <form action="/stock" method="post">
+                                        <div class="form-group">
+                                            <input type="hidden" name="Item-id" value="{{l.pid}}">
+
+
+                                            <div class="form-group">
+                                                <label for="" class="form-label">stock_quantity</label>
+                                                <input name="stock" >
+                                            </div>
+                                            <input type="submit" class="btn btn-primary">
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary">Save changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
                 <td>
                     <!-- Button trigger modal -->
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter{{l.id}}">
@@ -162,10 +199,7 @@
                                                 <label for="" class="form-label">selling_price</label>
                                                 <input name="sellingprice" value="{{l.selling_price}}">
                                             </div>
-                                            <div class="form-group">
-                                                <label for="" class="form-label">stock_quantity</label>
-                                                <input name="stockquantity" value="{{l.stock_quantity}}">
-                                            </div>
+                                            
                                             <input type="submit" class="btn btn-primary">
                                     </form>
                                 </div>
@@ -180,7 +214,7 @@
                     <!-- Edit Modal -->
 
 
-                </td>
+                </td>  
             </tr>
             {%endfor%}
         </tbody>

@@ -1,29 +1,29 @@
+from flask import Flask, request, render_template, redirect, url_for, flash,session
 from werkzeug.utils import escape
-from kra import Payroll
-import psycopg2
-from flask import Flask, request, render_template, Request, redirect, url_for, flash,session
-from datetime import date
-import json, ast
-
-from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
-from mai import sales
+from functools import wraps
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "#deno0707@mwangi"
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:deno0707@localhost:5432/orm'
+app.config["SECRET_KEY"] = "#deno0707@mwangi"
+
 db = SQLAlchemy(app)
 
-from models.tables import Products,User,Sales,Stocks,Restocking_update
-db.create_all()
+from models.products import Products
+from models.restocking_update import Restocking_update
+from models.sales import Sales
+from models.stocks import Stocks
+from models.user import User
 
-
+@app.before_first_request()
+def create_table():
+     db.drop_all()
+     db.create_all()
 
 @app.route('/')
 def hello_world():
     return render_template('index.html')
-
-
 
 def login_required(f):
     @wraps(f)
@@ -90,6 +90,11 @@ def product():
         new_product = Products(name =product_name ,buying_price=buying_price,selling_price=selling_price, stock_quantity = stock_quantity)
         db.session.add(new_product)
         db.session.commit()  
+        id=Products.query.filter_by(product_name=product_name).all()
+        pid=id.id
+        newstock=Stocks(pid=pid,stock_quantity=stock_quantity)
+        db.session.add(newstock)
+        db.session.commit()  
         return redirect("/products")
      else:
           all_products=Products.query.all()
@@ -139,26 +144,16 @@ def edit():
           name= request.form["name"]
           bp = request.form["buyingprice"]
           sp= request.form["sellingprice"]
-          st= request.form["stockquantity"]
-          print(st)
           stock=Stocks.query.filter_by(id=id).all()
           sbp=stock[0].buying_price
           ssp=stock[0].selling_price
-          sst=stock[0].stock_quantity
-          print(sst)
+          
+          
           bp=int(bp)
           sp=int(sp)
-          st=int(st)
           sbp=bp-sbp
           ssp=sp-ssp
-          sst=st-sst
-          print(sst)
-          change=Restocking_update(pid=id,stockchanged=sst,changed_sp=ssp,changed_bp=sbp)
-          db.session.add(change)
-          db.session.commit()  
-          update=Stocks.query.filter_by(id=id).update({Stocks.name:name,Stocks.buying_price:bp,Stocks.selling_price:sp,Stocks.stock_quantity:st})
-          db.session.commit()
-          updated=Products.query.filter_by(id=id).update({Products.name:name,Products.buying_price:bp,Products.selling_price:sp,Products.stock_quantity:st})
+          updated=Products.query.filter_by(id=id).update({Products.name:name,Products.buying_price:bp,Products.selling_price:sp})
           db.session.commit()
           
           return redirect("/products")
@@ -167,15 +162,21 @@ def edit():
 # @login_required
 def stock():
      if request.method == "POST": 
-          name = request.form["name"]
-          buying_price = request.form["buying_price"]
-          selling = request.form["selling"]
-          stock = request.form["stock"]
-          new_product = Stocks(name =name ,buying_price=buying_price,selling_price=selling, stock_quantity = stock)
-          db.session.add(new_product)
+          
+          pid = request.form["Item-id"]
+          
+          
+          stock_added = request.form["stock"]
+          stock=Stocks.query.filter_by(pid=pid).all()
+          sst=stock[0].stock_quantity
+          s=int(stock_added)
+          newstock=sst+s
+          update=Stocks.query.filter_by(pid=pid).update({Stocks.stock_quantity:newstock})
           db.session.commit()
-          new_product = Products(name =name ,buying_price=buying_price,selling_price=selling, stock_quantity = stock)
-          db.session.add(new_product)
+          change=Restocking_update(pid=pid,stockchanged=stock_added,newstock=newstock)
+          db.session.add(change)
+          db.session.commit()  
+         
           db.session.commit()
           return redirect("/stock")
      else:
@@ -184,24 +185,6 @@ def stock():
           return render_template('stock.html', list1=list1)
 
 
-     
 
-
-
-
-
-     
-     
-        
-          
-
-
-
-
-
-
-
-
-
-if __name__ == '__main__':
-     app.run(debug=True)
+# if __name__ == '__main__':
+#      app.run(debug=True)
